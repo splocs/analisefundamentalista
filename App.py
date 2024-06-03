@@ -83,9 +83,9 @@ except Exception as e:
     st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
 
 # Função para exibir dados com tratamento de exceção
-def exibir_dados(label, func):
+def exibir_dados(label, func, period):
     try:
-        dados = func()
+        dados = func(period=period)
         if dados is not None and not dados.empty:
             st.write(f"**{label}:**")
             st.write(dados)
@@ -108,7 +108,7 @@ dados_detalhados = {
     "Subsetor": info.get("industry", "N/A"),
     "Vol $ méd (2m)": info.get("averageVolume", "N/A"),
     "Valor de mercado": info.get("marketCap", "N/A"),
-    "Últ balanço processado": formatar_data(date.today()), # Deve ser ajustado conforme disponibilidade
+    "Últ balanço processado": formatar_data(date.today()),  # Deve ser ajustado conforme disponibilidade
     "Valor da firma": info.get("enterpriseValue", "N/A"),
     "Nro. Ações": info.get("sharesOutstanding", "N/A"),
 }
@@ -159,45 +159,50 @@ balanco = {
 
 st.write(pd.DataFrame(balanco.items(), columns=["Descrição", "Valor"]))
 
+# Seletor para alterar entre dados anuais e trimestrais
+periodo_financeiro = st.radio("Selecionar período financeiro", ["Anual", "Trimestral"])
+
 # Coletando e exibindo dados fundamentalistas adicionais
-exibir_dados("Histórico de preços", lambda: acao_escolhida.history(period="max"))
-exibir_dados("Dividendos", lambda: acao_escolhida.dividends)
-exibir_dados("Splits de ações", lambda: acao_escolhida.splits)
-exibir_dados("Balanço patrimonial", lambda: acao_escolhida.balance_sheet)
-exibir_dados("Demonstração de resultados", lambda: acao_escolhida.financials)
-exibir_dados("Fluxo de caixa", lambda: acao_escolhida.cashflow)
-exibir_dados("Recomendações de analistas", lambda: acao_escolhida.recommendations)
-exibir_dados("Informações Básicas", lambda: acao_escolhida.news)
+period = 'annual' if periodo_financeiro == "Anual" else 'quarterly'
 
-# Gráficos para visualização de dados financeiros
-st.subheader('Gráficos')
+exibir_dados("Histórico de preços", lambda period: acao_escolhida.history(period="max"), period)
+exibir_dados("Dividendos", lambda period: acao_escolhida.dividends, period)
+exibir_dados("Splits de ações", lambda period: acao_escolhida.splits, period)
+exibir_dados("Balanço patrimonial", lambda period: acao_escolhida.balance_sheet if period == 'annual' else acao_escolhida.quarterly_balance_sheet, period)
+exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, period)
+exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
+exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
+exibir_dados("Informações Básicas", lambda period: acao_escolhida.news, period)
 
-# Gráfico de Preços de Fechamento
-fig = px.line(df_valores, x='Data', y='Fechamento', title='Preços de Fechamento ao Longo do Tempo')
-st.plotly_chart(fig)
-
-# Gráfico de Volume
-fig2 = px.bar(df_valores, x='Data', y='Volume', title='Volume de Negociação ao Longo do Tempo')
-st.plotly_chart(fig2)
+# Gráficos usando Plotly
+# Gráfico de Histórico de Preços
+if not acao_escolhida.history(period="max").empty:
+    fig1 = px.line(acao_escolhida.history(period="max"), title='Histórico de Preços')
+    st.plotly_chart(fig1)
 
 # Gráfico de Dividendos
 if not acao_escolhida.dividends.empty:
-    fig3 = px.line(acao_escolhida.dividends, title='Histórico de Dividendos')
+    fig2 = px.bar(acao_escolhida.dividends, title='Dividendos')
+    st.plotly_chart(fig2)
+
+# Gráfico de Splits de Ações
+if not acao_escolhida.splits.empty:
+    fig3 = px.bar(acao_escolhida.splits, title='Splits de Ações')
     st.plotly_chart(fig3)
 
 # Gráfico de Balanço Patrimonial
 if not acao_escolhida.balance_sheet.empty:
-    fig4 = px.bar(acao_escolhida.balance_sheet, title='Balanço Patrimonial')
+    fig4 = px.bar(acao_escolhida.balance_sheet if period == 'annual' else acao_escolhida.quarterly_balance_sheet, title='Balanço Patrimonial')
     st.plotly_chart(fig4)
 
 # Gráfico de Demonstração de Resultados
 if not acao_escolhida.financials.empty:
-    fig5 = px.bar(acao_escolhida.financials, title='Demonstração de Resultados')
+    fig5 = px.bar(acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, title='Demonstração de Resultados')
     st.plotly_chart(fig5)
 
 # Gráfico de Fluxo de Caixa
 if not acao_escolhida.cashflow.empty:
-    fig6 = px.bar(acao_escolhida.cashflow, title='Fluxo de Caixa')
+    fig6 = px.bar(acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, title='Fluxo de Caixa')
     st.plotly_chart(fig6)
 
 
