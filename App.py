@@ -66,7 +66,6 @@ acao = df['snome']
 nome_acao_escolhida = st.sidebar.selectbox('Escolha uma ação:', acao)
 df_acao = df[df['snome'] == nome_acao_escolhida]
 sigla_acao_escolhida = df_acao.iloc[0]['sigla_acao']
-sigla_acao_escolhida += '.SA'
 
 # Pegando os valores online
 df_valores = pegar_valores_online(sigla_acao_escolhida)
@@ -84,7 +83,8 @@ st.write(df_valores.tail(40))
 try:
     acao_escolhida = yf.Ticker(sigla_acao_escolhida)
     info = acao_escolhida.info
-    logo_url = info.get('logo_url', pegar_logo_empresa(sigla_acao_escolhida.split('.')[0].lower()))
+    ticker_sem_extensao = sigla_acao_escolhida.split('.')[0].lower()
+    logo_url = info.get('logo_url', pegar_logo_empresa(ticker_sem_extensao))
 except Exception as e:
     st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
     logo_url = None
@@ -140,7 +140,7 @@ indicadores = {
     "PSR": info.get("priceToSalesTrailing12Months", "N/A"),
     "Marg. EBIT": info.get("ebitdaMargins", "N/A"),
     "P/Ativos": info.get("totalAssets", "N/A"),
-    "Marg. Líquida": info.get("profitMargins", "N/A"),
+    "Marg. Líquida": info.get("profitMargins", "N/A
     "P/Cap. Giro": info.get("currentRatio", "N/A"),
     "EBIT / Ativo": info.get("ebitda", "N/A"),
     "P/Ativ Circ Liq": info.get("enterpriseValue", "N/A"),
@@ -184,7 +184,7 @@ exibir_dados("Balanço patrimonial", lambda period: acao_escolhida.balance_sheet
 exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, period)
 exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
 exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
-exibir_dados("Informações Básicas", lambda period: acao_escolhida.news, period)
+exibir_dados("Informações Básicas", lambda period: acao_escolhida.info, period)
 
 # Gráficos usando Plotly
 # Gráfico de Histórico de Preços
