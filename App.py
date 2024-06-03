@@ -35,19 +35,23 @@ def pegar_valores_online(sigla_acao):
     df.reset_index(inplace=True)
     return df
 
+# Função para pegar o URL do logotipo da empresa
+def pegar_logo_empresa(ticker):
+    return f"https://logo.clearbit.com/{ticker}.com"
+
 # Definindo data de início e fim
 DATA_INICIO = '2017-01-01'
 DATA_FIM = date.today().strftime('%Y-%m-%d')
 
-# Logo
+# Logo padrão (se não houver logo da empresa)
 logo_path = "logo.png"
-logo = Image.open(logo_path)
+logo_padrao = Image.open(logo_path)
 
-# Exibir o logo no aplicativo Streamlit
-st.image(logo, width=250)
+# Exibir o logo padrão no aplicativo Streamlit
+st.image(logo_padrao, width=250)
 
-# Exibir o logo na sidebar
-st.sidebar.image(logo, width=150)
+# Exibir o logo padrão na sidebar
+st.sidebar.image(logo_padrao, width=150)
 
 st.title('Análise de ações')
 
@@ -79,8 +83,16 @@ st.write(df_valores.tail(40))
 # Criando o objeto Ticker
 try:
     acao_escolhida = yf.Ticker(sigla_acao_escolhida)
+    info = acao_escolhida.info
+    logo_url = info.get('logo_url', pegar_logo_empresa(sigla_acao_escolhida.split('.')[0].lower()))
 except Exception as e:
     st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
+    logo_url = None
+
+# Exibir o logotipo da empresa selecionada
+if logo_url:
+    st.image(logo_url, width=250)
+    st.sidebar.image(logo_url, width=150)
 
 # Função para exibir dados com tratamento de exceção
 def exibir_dados(label, func, period):
@@ -159,18 +171,18 @@ balanco = {
 
 st.write(pd.DataFrame(balanco.items(), columns=["Descrição", "Valor"]))
 
-
 # Seletor para alterar entre dados anuais e trimestrais
 periodo_financeiro = st.radio("Selecionar período financeiro", ["Anual", "Trimestral"])
 
 # Coletando e exibindo dados fundamentalistas adicionais
 period = 'annual' if periodo_financeiro == "Anual" else 'quarterly'
-exibir_dados("Balanço patrimonial", lambda period: acao_escolhida.balance_sheet if period == 'annual' else acao_escolhida.quarterly_balance_sheet, period)
-exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, period)
-exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
+
 exibir_dados("Histórico de preços", lambda period: acao_escolhida.history(period="max"), period)
 exibir_dados("Dividendos", lambda period: acao_escolhida.dividends, period)
 exibir_dados("Splits de ações", lambda period: acao_escolhida.splits, period)
+exibir_dados("Balanço patrimonial", lambda period: acao_escolhida.balance_sheet if period == 'annual' else acao_escolhida.quarterly_balance_sheet, period)
+exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, period)
+exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
 exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
 exibir_dados("Informações Básicas", lambda period: acao_escolhida.news, period)
 
