@@ -106,16 +106,4 @@ exibir_dados("Fluxo de caixa", lambda: acao_escolhida.cashflow)
 exibir_dados("Recomendações de analistas", lambda: acao_escolhida.recommendations)
 exibir_dados("Informações Básicas", lambda: acao_escolhida.news)
 
-# Exibindo opções de ações
-try:
-    options = acao_escolhida.options
-    if options:
-        option_date = options[0]
-        calls = acao_escolhida.option_chain(option_date).calls
-        puts = acao_escolhida.option_chain(option_date).puts
-        st.write(f"**Calls para {option_date}:**")
-        st.write(calls)
-        st.write(f"**Puts para {option_date}:**")
-        st.write(puts)
-except Exception as e:
-    st.warning(f"Opções de ações não disponíveis: {e}")
+
