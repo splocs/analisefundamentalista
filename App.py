@@ -92,7 +92,74 @@ def exibir_dados(label, func):
     except Exception as e:
         st.warning(f"{label} não disponível: {e}")
 
-# Coletando e exibindo dados fundamentalistas
+# Exibir informações detalhadas da ação
+st.subheader('Informações Detalhadas da Ação')
+
+info = acao_escolhida.info
+dados_detalhados = {
+    "Papel": sigla_acao_escolhida,
+    "Cotação": info.get("currentPrice", "N/A"),
+    "Tipo": "Ordinária" if info.get("quoteType", "N/A") == "EQUITY" else "Preferencial",
+    "Data últ cotação": formatar_data(date.today()),
+    "Empresa": info.get("shortName", "N/A"),
+    "Min 52 semanas": info.get("fiftyTwoWeekLow", "N/A"),
+    "Setor": info.get("sector", "N/A"),
+    "Max 52 semanas": info.get("fiftyTwoWeekHigh", "N/A"),
+    "Subsetor": info.get("industry", "N/A"),
+    "Vol $ méd (2m)": info.get("averageVolume", "N/A"),
+    "Valor de mercado": info.get("marketCap", "N/A"),
+    "Últ balanço processado": formatar_data(date.today()), # Deve ser ajustado conforme disponibilidade
+    "Valor da firma": info.get("enterpriseValue", "N/A"),
+    "Nro. Ações": info.get("sharesOutstanding", "N/A"),
+}
+
+st.write(pd.DataFrame(dados_detalhados.items(), columns=["Descrição", "Valor"]))
+
+# Exibir Indicadores Fundamentalistas
+st.subheader('Indicadores Fundamentalistas')
+
+indicadores = {
+    "P/L": info.get("trailingPE", "N/A"),
+    "LPA": info.get("epsTrailingTwelveMonths", "N/A"),
+    "P/VP": info.get("priceToBook", "N/A"),
+    "VPA": info.get("bookValue", "N/A"),
+    "P/EBIT": info.get("enterpriseToEbitda", "N/A"),
+    "Marg. Bruta": info.get("grossMargins", "N/A"),
+    "PSR": info.get("priceToSalesTrailing12Months", "N/A"),
+    "Marg. EBIT": info.get("ebitdaMargins", "N/A"),
+    "P/Ativos": info.get("totalAssets", "N/A"),
+    "Marg. Líquida": info.get("profitMargins", "N/A"),
+    "P/Cap. Giro": info.get("currentRatio", "N/A"),
+    "EBIT / Ativo": info.get("ebitda", "N/A"),
+    "P/Ativ Circ Liq": info.get("enterpriseValue", "N/A"),
+    "ROIC": info.get("returnOnAssets", "N/A"),
+    "Div. Yield": info.get("dividendYield", "N/A"),
+    "ROE": info.get("returnOnEquity", "N/A"),
+    "EV / EBITDA": info.get("enterpriseToEbitda", "N/A"),
+    "Liquidez Corr": info.get("currentRatio", "N/A"),
+    "EV / EBIT": info.get("enterpriseToRevenue", "N/A"),
+    "Div Br/ Patrim": info.get("debtToEquity", "N/A"),
+    "Cres. Rec (5a)": info.get("revenueGrowth", "N/A"),
+    "Giro Ativos": info.get("assetTurnover", "N/A")
+}
+
+st.write(pd.DataFrame(indicadores.items(), columns=["Indicador", "Valor"]))
+
+# Dados do Balanço Patrimonial
+st.subheader('Dados do Balanço Patrimonial')
+
+balanco = {
+    "Ativo": info.get("totalAssets", "N/A"),
+    "Dív. Bruta": info.get("totalDebt", "N/A"),
+    "Disponibilidades": info.get("cash", "N/A"),
+    "Dív. Líquida": info.get("netDebt", "N/A"),
+    "Ativo Circulante": info.get("currentAssets", "N/A"),
+    "Patrim. Líq": info.get("totalStockholderEquity", "N/A")
+}
+
+st.write(pd.DataFrame(balanco.items(), columns=["Descrição", "Valor"]))
+
+# Coletando e exibindo dados fundamentalistas adicionais
 exibir_dados("Histórico de preços", lambda: acao_escolhida.history(period="max"))
 exibir_dados("Dividendos", lambda: acao_escolhida.dividends)
 exibir_dados("Splits de ações", lambda: acao_escolhida.splits)
@@ -132,4 +199,5 @@ if not acao_escolhida.financials.empty:
 if not acao_escolhida.cashflow.empty:
     fig6 = px.bar(acao_escolhida.cashflow, title='Fluxo de Caixa')
     st.plotly_chart(fig6)
+
 
