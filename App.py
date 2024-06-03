@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 from PIL import Image
 from datetime import date
+import plotly.express as px
 
 # Configurando a largura da página
 st.set_page_config(layout="wide")
@@ -23,6 +24,7 @@ traducao = {
 }
 
 # Função para pegar os dados das ações
+@st.cache
 def pegar_dados_acoes():
     path = 'https://raw.githubusercontent.com/splocs/meu-repositorio/main/acoes.csv'
     return pd.read_csv(path, delimiter=';')
@@ -99,3 +101,35 @@ exibir_dados("Demonstração de resultados", lambda: acao_escolhida.financials)
 exibir_dados("Fluxo de caixa", lambda: acao_escolhida.cashflow)
 exibir_dados("Recomendações de analistas", lambda: acao_escolhida.recommendations)
 exibir_dados("Informações Básicas", lambda: acao_escolhida.news)
+
+# Gráficos para visualização de dados financeiros
+st.subheader('Gráficos')
+
+# Gráfico de Preços de Fechamento
+fig = px.line(df_valores, x='Data', y='Fechamento', title='Preços de Fechamento ao Longo do Tempo')
+st.plotly_chart(fig)
+
+# Gráfico de Volume
+fig2 = px.bar(df_valores, x='Data', y='Volume', title='Volume de Negociação ao Longo do Tempo')
+st.plotly_chart(fig2)
+
+# Gráfico de Dividendos
+if not acao_escolhida.dividends.empty:
+    fig3 = px.line(acao_escolhida.dividends, title='Histórico de Dividendos')
+    st.plotly_chart(fig3)
+
+# Gráfico de Balanço Patrimonial
+if not acao_escolhida.balance_sheet.empty:
+    fig4 = px.bar(acao_escolhida.balance_sheet, title='Balanço Patrimonial')
+    st.plotly_chart(fig4)
+
+# Gráfico de Demonstração de Resultados
+if not acao_escolhida.financials.empty:
+    fig5 = px.bar(acao_escolhida.financials, title='Demonstração de Resultados')
+    st.plotly_chart(fig5)
+
+# Gráfico de Fluxo de Caixa
+if not acao_escolhida.cashflow.empty:
+    fig6 = px.bar(acao_escolhida.cashflow, title='Fluxo de Caixa')
+    st.plotly_chart(fig6)
+
