@@ -35,20 +35,9 @@ def pegar_valores_online(sigla_acao):
     df.reset_index(inplace=True)
     return df
 
-
 # Definindo data de início e fim
 DATA_INICIO = '2017-01-01'
 DATA_FIM = date.today().strftime('%Y-%m-%d')
-
-# Logo padrão (se não houver logo da empresa)
-logo_path = "logo.png"
-logo_padrao = Image.open(logo_path)
-
-# Exibir o logo padrão no aplicativo Streamlit
-st.image(logo_padrao, width=250)
-
-# Exibir o logo padrão na sidebar
-st.sidebar.image(logo_padrao, width=150)
 
 st.title('Análise de ações')
 
@@ -81,12 +70,9 @@ st.write(df_valores.tail(40))
 try:
     acao_escolhida = yf.Ticker(sigla_acao_escolhida)
     info = acao_escolhida.info
-    logo_url = info.get('logo_url', pegar_logo_empresa(sigla_acao_escolhida.split('.')[0].lower()))
 except Exception as e:
     st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
     logo_url = None
-
-
 
 # Função para exibir dados com tratamento de exceção
 def exibir_dados(label, func, period):
