@@ -35,9 +35,6 @@ def pegar_valores_online(sigla_acao):
     df.reset_index(inplace=True)
     return df
 
-# Função para pegar o URL do logotipo da empresa
-def pegar_logo_empresa(ticker):
-    return f"https://logo.clearbit.com/{ticker}.com"
 
 # Definindo data de início e fim
 DATA_INICIO = '2017-01-01'
@@ -89,10 +86,7 @@ except Exception as e:
     st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
     logo_url = None
 
-# Exibir o logotipo da empresa selecionada
-if logo_url:
-    st.image(logo_url, width=250)
-    st.sidebar.image(logo_url, width=150)
+
 
 # Função para exibir dados com tratamento de exceção
 def exibir_dados(label, func, period):
