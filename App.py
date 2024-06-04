@@ -18,7 +18,7 @@ traducao = {
     'Open': 'Abertura',
     'High': 'Alta',
     'Low': 'Baixa',
-    '-lose': 'Fechamento',
+    'Close': 'Fechamento',
     'Adj Close': 'Fechamento Ajustado',
     'Volume': 'Volume'
 }
@@ -35,29 +35,23 @@ def pegar_valores_online(sigla_acao):
     df.reset_index(inplace=True)
     return df
 
-# Função para pegar o URL do logotipo da empresa
-def pegar_logo_empresa(ticker):
-    return f"https://logo.clearbit.com/{ticker}.com"
+# Função para traduzir o texto
+def traduzir_texto(texto):
+    return texto  # Pode ser adicionado um serviço de tradução aqui
 
 # Definindo data de início e fim
 DATA_INICIO = '2017-01-01'
 DATA_FIM = date.today().strftime('%Y-%m-%d')
 
-# Logo padrão (se não houver logo da empresa)
+# Exibir o logo padrão no aplicativo Streamlit
 logo_path = "logo.png"
 logo_padrao = Image.open(logo_path)
-
-# Exibir o logo padrão no aplicativo Streamlit
 st.image(logo_padrao, width=250)
 
-# Exibir o logo padrão na sidebar
-st.sidebar.image(logo_padrao, width=150)
-
-st.title('Análise de ações')
+st.title('Análise de Ações')
 
 # Criando a sidebar
 st.sidebar.markdown('Escolha a ação')
-n_dias = st.sidebar.slider('Quantidade de dias de previsão', 30, 365)
 
 # Pegando os dados das ações
 df = pegar_dados_acoes()
@@ -71,28 +65,67 @@ sigla_acao_escolhida += '.SA'
 # Pegando os valores online
 df_valores = pegar_valores_online(sigla_acao_escolhida)
 
-st.subheader('Tabela de Valores - ' + nome_acao_escolhida)
+# Criando o objeto Ticker
+try:
+    acao_escolhida = yf.Ticker(sigla_acao_escolhida)
+    info = acao_escolhida.info
+except Exception as e:
+    st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
+
+# 1. Informações Básicas do Ativo
+st.subheader(f"{info.get('longName', 'N/A')} ({sigla_acao_escolhida})")
+
+st.write(f"{info.get('address1', 'N/A')}, {info.get('city', 'N/A')}, {info.get('state', 'N/A')}, {info.get('country', 'N/A')}")
+st.write(f"Website: {info.get('website', 'N/A')}")
+st.write(f"Setor: {traduzir_texto(info.get('sector', 'N/A'))}")
+st.write(f"Subsetor: {traduzir_texto(info.get('industry', 'N/A'))}")
+
+# 2. Valor Atual e Variação
+preco_atual = info.get("currentPrice", "N/A")
+variacao = info.get("regularMarketChangePercent", "N/A")
+if variacao != "N/A":
+    variacao = round(variacao, 2)
+    if variacao >= 0:
+        variacao_str = f"{preco_atual} ({variacao}%)"
+        st.write(f"**{variacao_str}**", style="color:blue")
+    else:
+        variacao_str = f"{preco_atual} ({variacao}%)"
+        st.write(f"**{variacao_str}**", style="color:red")
+
+# 3. Descrição
+st.write(f"**Descrição:** {traduzir_texto(info.get('longBusinessSummary', 'N/A'))}")
+
+# 4. Próximos Eventos
+st.subheader('Próximos Eventos')
+eventos = acao_escolhida.calendar
+st.write(eventos)
+
+# 5. Eventos Recentes
+st.subheader('Eventos Recentes')
+dividendos = acao_escolhida.dividends
+splits = acao_escolhida.splits
+
+if not dividendos.empty:
+    st.write("**Dividendos Recentes**")
+    st.write(dividendos.tail(3))
+
+if not splits.empty:
+    st.write("**Splits de Ações Recentes**")
+    st.write(splits.tail(3))
 
 # Renomeando as colunas usando o dicionário de tradução
 df_valores = df_valores.rename(columns=traducao)
 
 # Convertendo a coluna "Data" para o formato desejado
 df_valores['Data'] = df_valores['Data'].dt.strftime('%d-%m-%Y')
+st.subheader('Tabela de Valores')
 st.write(df_valores.tail(40))
 
-# Criando o objeto Ticker
-try:
-    acao_escolhida = yf.Ticker(sigla_acao_escolhida)
-    info = acao_escolhida.info
-    logo_url = info.get('logo_url', pegar_logo_empresa(sigla_acao_escolhida.split('.')[0].lower()))
-except Exception as e:
-    st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
-    logo_url = None
-
-# Exibir o logotipo da empresa selecionada
-if logo_url:
-    st.image(logo_url, width=250)
-    st.sidebar.image(logo_url, width=150)
+# Gráficos usando Plotly
+# Gráfico de Histórico de Preços
+if not df_valores.empty:
+    fig1 = px.line(df_valores, x='Data', y='Fechamento', title='Histórico de Preços')
+    st.plotly_chart(fig1)
 
 # Função para exibir dados com tratamento de exceção
 def exibir_dados(label, func, period):
@@ -106,8 +139,6 @@ def exibir_dados(label, func, period):
 
 # Exibir informações detalhadas da ação
 st.subheader('Informações Detalhadas da Ação')
-
-info = acao_escolhida.info
 dados_detalhados = {
     "Papel": sigla_acao_escolhida,
     "Cotação": info.get("currentPrice", "N/A"),
@@ -185,35 +216,4 @@ exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.finan
 exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
 exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
 exibir_dados("Informações Básicas", lambda period: acao_escolhida.news, period)
-
-# Gráficos usando Plotly
-# Gráfico de Histórico de Preços
-if not acao_escolhida.history(period="max").empty:
-    fig1 = px.line(acao_escolhida.history(period="max"), title='Histórico de Preços')
-    st.plotly_chart(fig1)
-
-# Gráfico de Dividendos
-if not acao_escolhida.dividends.empty:
-    fig2 = px.bar(acao_escolhida.dividends, title='Dividendos')
-    st.plotly_chart(fig2)
-
-# Gráfico de Splits de Ações
-if not acao_escolhida.splits.empty:
-    fig3 = px.bar(acao_escolhida.splits, title='Splits de Ações')
-    st.plotly_chart(fig3)
-
-# Gráfico de Balanço Patrimonial
-if not acao_escolhida.balance_sheet.empty:
-    fig4 = px.bar(acao_escolhida.balance_sheet if period == 'annual' else acao_escolhida.quarterly_balance_sheet, title='Balanço Patrimonial')
-    st.plotly_chart(fig4)
-
-# Gráfico de Demonstração de Resultados
-if not acao_escolhida.financials.empty:
-    fig5 = px.bar(acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, title='Demonstração de Resultados')
-    st.plotly_chart(fig5)
-
-# Gráfico de Fluxo de Caixa
-if not acao_escolhida.cashflow.empty:
-    fig6 = px.bar(acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, title='Fluxo de Caixa')
-    st.plotly_chart(fig6)
 
