@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
+from PIL import Image
 from datetime import date
 import plotly.express as px
 
@@ -17,13 +18,13 @@ traducao = {
     'Open': 'Abertura',
     'High': 'Alta',
     'Low': 'Baixa',
-    'Close': 'Fechamento',
+    '-lose': 'Fechamento',
     'Adj Close': 'Fechamento Ajustado',
     'Volume': 'Volume'
 }
 
 # Função para pegar os dados das ações
-@st.cache_data
+@st.cache
 def pegar_dados_acoes():
     path = 'https://raw.githubusercontent.com/splocs/meu-repositorio/main/acoes.csv'
     return pd.read_csv(path, delimiter=';')
@@ -34,15 +35,29 @@ def pegar_valores_online(sigla_acao):
     df.reset_index(inplace=True)
     return df
 
+# Função para pegar o URL do logotipo da empresa
+def pegar_logo_empresa(ticker):
+    return f"https://logo.clearbit.com/{ticker}.com"
+
 # Definindo data de início e fim
 DATA_INICIO = '2017-01-01'
 DATA_FIM = date.today().strftime('%Y-%m-%d')
 
-# Exibir título do aplicativo
+# Logo padrão (se não houver logo da empresa)
+logo_path = "logo.png"
+logo_padrao = Image.open(logo_path)
+
+# Exibir o logo padrão no aplicativo Streamlit
+st.image(logo_padrao, width=250)
+
+# Exibir o logo padrão na sidebar
+st.sidebar.image(logo_padrao, width=150)
+
 st.title('Análise de ações')
 
 # Criando a sidebar
 st.sidebar.markdown('Escolha a ação')
+n_dias = st.sidebar.slider('Quantidade de dias de previsão', 30, 365)
 
 # Pegando os dados das ações
 df = pegar_dados_acoes()
@@ -56,34 +71,6 @@ sigla_acao_escolhida += '.SA'
 # Pegando os valores online
 df_valores = pegar_valores_online(sigla_acao_escolhida)
 
-# Criando o objeto Ticker
-try:
-    acao_escolhida = yf.Ticker(sigla_acao_escolhida)
-    info = acao_escolhida.info
-except Exception as e:
-    st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
-
-# Exibir informações básicas da ação
-st.subheader('Informações Básicas do Ativo')
-
-info_basica = {
-    "Nome do Ativo": f"{info.get('longName', 'N/A')} ({sigla_acao_escolhida})",
-    "Endereço": info.get('address1', 'N/A'),
-    "Cidade": info.get('city', 'N/A'),
-    "Estado": info.get('state', 'N/A'),
-    "País": info.get('country', 'N/A'),
-    "Website": info.get('website', 'N/A'),
-    "Setor": info.get('sector', 'N/A'),
-    "Subsetor": info.get('industry', 'N/A')
-}
-
-st.write(pd.DataFrame(info_basica.items(), columns=["Descrição", "Valor"]))
-
-# Exibir descrição da empresa
-st.subheader('Descrição da Empresa')
-st.write(info.get('longBusinessSummary', 'N/A'))
-
-# Exibir tabela de valores
 st.subheader('Tabela de Valores - ' + nome_acao_escolhida)
 
 # Renomeando as colunas usando o dicionário de tradução
@@ -92,6 +79,20 @@ df_valores = df_valores.rename(columns=traducao)
 # Convertendo a coluna "Data" para o formato desejado
 df_valores['Data'] = df_valores['Data'].dt.strftime('%d-%m-%Y')
 st.write(df_valores.tail(40))
+
+# Criando o objeto Ticker
+try:
+    acao_escolhida = yf.Ticker(sigla_acao_escolhida)
+    info = acao_escolhida.info
+    logo_url = info.get('logo_url', pegar_logo_empresa(sigla_acao_escolhida.split('.')[0].lower()))
+except Exception as e:
+    st.error(f"Erro ao criar o objeto Ticker para {sigla_acao_escolhida}: {e}")
+    logo_url = None
+
+# Exibir o logotipo da empresa selecionada
+if logo_url:
+    st.image(logo_url, width=250)
+    st.sidebar.image(logo_url, width=150)
 
 # Função para exibir dados com tratamento de exceção
 def exibir_dados(label, func, period):
@@ -106,6 +107,7 @@ def exibir_dados(label, func, period):
 # Exibir informações detalhadas da ação
 st.subheader('Informações Detalhadas da Ação')
 
+info = acao_escolhida.info
 dados_detalhados = {
     "Papel": sigla_acao_escolhida,
     "Cotação": info.get("currentPrice", "N/A"),
@@ -214,4 +216,3 @@ if not acao_escolhida.financials.empty:
 if not acao_escolhida.cashflow.empty:
     fig6 = px.bar(acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, title='Fluxo de Caixa')
     st.plotly_chart(fig6)
-
