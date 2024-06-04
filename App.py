@@ -13,7 +13,7 @@ def formatar_data(data):
     return data.strftime('%d-%m-%Y')
 
 # Função para pegar os dados das ações
-@st.cache
+@st.cache_data
 def pegar_dados_acoes():
     path = 'https://raw.githubusercontent.com/splocs/meu-repositorio/main/acoes.csv'
     return pd.read_csv(path, delimiter=';')
@@ -76,7 +76,10 @@ valor_atual = info.get('currentPrice', 'N/A')
 mudanca = info.get('regularMarketChangePercent', 'N/A')
 
 st.subheader('Valor Atual')
-st.write(f"**{valor_atual}** {mudanca:.2f}%")
+try:
+    st.write(f"**{valor_atual}** {float(mudanca):.2f}%")
+except ValueError:
+    st.write(f"**{valor_atual}** {mudanca}")
 
 # Descrição da empresa
 descricao = info.get('longBusinessSummary', 'N/A')
@@ -179,12 +182,12 @@ indicadores = {
     "P/Cap. Giro": info.get("currentRatio", "N/A"),
     "EBIT / Ativo": info.get("ebitda", "N/A"),
     "P/Ativ Circ Liq": info.get("enterpriseValue", "N/A"),
-    "ROIC": info.get("returnOnAssets", "N/A"),
+    "ROIC": info.get("returnOnEquity", "N/A"),
     "Div. Yield": info.get("dividendYield", "N/A"),
-    "ROE": info.get("returnOnEquity", "N/A"),
+    "ROE": info.get("returnOnAssets", "N/A"),
     "EV / EBITDA": info.get("enterpriseToEbitda", "N/A"),
     "Liquidez Corr": info.get("currentRatio", "N/A"),
-    "EV / EBIT": info.get("enterpriseToRevenue", "N/A"),
+    "EV / EBIT": info.get("enterpriseToEbitda", "N/A"),
     "Div Br/ Patrim": info.get("debtToEquity", "N/A"),
     "Cres. Rec (5a)": info.get("revenueGrowth", "N/A"),
     "Div. Br/ EBITDA": info.get("debtToEbitda", "N/A"),
@@ -226,6 +229,10 @@ explicacoes = {
     "Giro Ativos": "Giro dos Ativos mostra a eficiência da empresa em usar seus ativos para gerar receita.",
     "Beta": "Beta mede a volatilidade da ação em relação ao mercado. Um beta maior que 1 indica maior volatilidade."
 }
+
+for indicador, explicacao in explicacoes.items():
+    st.write(f"**{indicador}:** {explicacao}")
+
 
 for indicador, explicacao in explicacoes.items():
     st.write(f"**{indicador}:** {explicacao}")
