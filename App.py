@@ -5,6 +5,10 @@ from PIL import Image
 from datetime import date
 import plotly.express as px
 
+
+# Você pode usar uma biblioteca específica para acessar um calendário econômico, como 'investpy' por exemplo.investin.com atençao testar depois
+
+
 # Configurando a largura da página
 st.set_page_config(layout="wide")
 
