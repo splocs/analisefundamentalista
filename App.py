@@ -189,33 +189,15 @@ exibir_dados("Balanço patrimonial", lambda period: acao_escolhida.balance_sheet
 exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, period)
 exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
 exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
-exibir_dados("Contratos de Opções", lambda period: acao_escolhida.options, period)
+
 
 #outro teste
 
-# Volume de Negociação
-exibir_dados("Volume Médio", lambda period: acao_escolhida.history(period="max")['Volume'].mean(), period)
+
 # Variação de Preço
 exibir_dados("Variação de Preço", lambda period: acao_escolhida.history(period="max")['Close'].diff(), period)
 # Percentual de Ganho/Perda
 exibir_dados("Percentual de Ganho/Perda", lambda period: acao_escolhida.history(period="max")['Close'].pct_change(), period)
-
-
-##ver se não tem duplicados
-
-exibir_dados("Descrição da Empresa", lambda period: info.get('longBusinessSummary', 'N/A'), period)
-exibir_dados("Setor da Empresa", lambda period: info.get('sector', 'N/A'), period)
-exibir_dados("Subsetor da Empresa", lambda period: info.get('industry', 'N/A'), period)
-exibir_dados("P/L (Preço/Lucro)", lambda period: info.get('trailingPE', 'N/A'), period)
-exibir_dados("Dividend Yield", lambda period: info.get('dividendYield', 'N/A'), period)
-exibir_dados("ROE (Return on Equity)", lambda period: info.get('returnOnEquity', 'N/A'), period)
-exibir_dados("P/VP (Preço/Valor Patrimonial)", lambda period: info.get('priceToBook', 'N/A'), period)
-exibir_dados("Margem Bruta", lambda period: info.get('grossMargins', 'N/A'), period)
-exibir_dados("Fluxo de Caixa Operacional", lambda period: acao_escolhida.cashflow[0].get('totalCashFromOperatingActivities', 'N/A'), period)
-exibir_dados("Fluxo de Caixa de Investimento", lambda period: acao_escolhida.cashflow[0].get('totalCashflowsFromInvestingActivities', 'N/A'), period)
-# Adicione outros itens do fluxo de caixa conforme necessário
-
-
 
 
 
