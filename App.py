@@ -1,61 +1,74 @@
 import yfinance as yf
-import streamlit as st
+import pandas as pd
 
-# Funções para calcular indicadores financeiros
-def calculate_var_ll(data):
-    return data['Net Income'].pct_change(periods=3).mean()
+# Função para buscar e exibir dados financeiros de uma ação
+def get_stock_data(ticker):
+    # Buscar os dados da ação
+    stock = yf.Ticker(ticker)
 
-def calculate_p_l(data):
-    return data['Close'].iloc[-1] / data['Earnings']
+    # Obter informações gerais
+    info = stock.info
+    
+    # Obter histórico de preços
+    history = stock.history(period="1y")
+    min_52_weeks = history['Close'].min()
+    max_52_weeks = history['Close'].max()
+    last_quote_date = history.index[-1].strftime('%Y-%m-%d')
+    last_quote = history['Close'][-1]
 
-def calculate_pfcp_pft(data):
-    return data['Short Term Debt'].iloc[-1] / data['Total Debt'].iloc[-1]
+    # Criar dicionário com os dados desejados
+    data = {
+        "Papel": info['symbol'],
+        "Cotação": last_quote,
+        "Tipo": info.get('quoteType', 'N/A'),
+        "Data últ cotação": last_quote_date,
+        "Empresa": info.get('longName', 'N/A'),
+        "Min 52 semanas": min_52_weeks,
+        "Setor": info.get('sector', 'N/A'),
+        "Max 52 semanas": max_52_weeks,
+        "Subsetor": info.get('industry', 'N/A'),
+        "Vol $ méd (2m)": info.get('averageDailyVolume10Day', 'N/A'),
+        "Valor de mercado": info.get('marketCap', 'N/A'),
+        "Últ balanço processado": info.get('lastFiscalYearEnd', 'N/A'),
+        "Valor da firma": info.get('enterpriseValue', 'N/A'),
+        "Nro. Ações": info.get('sharesOutstanding', 'N/A'),
+        "P/L": info.get('trailingPE', 'N/A'),
+        "LPA": info.get('trailingEps', 'N/A'),
+        "P/VP": info.get('priceToBook', 'N/A'),
+        "VPA": info.get('bookValue', 'N/A'),
+        "P/EBIT": info.get('enterpriseToEbitda', 'N/A'),
+        "Marg. Bruta": info.get('grossMargins', 'N/A'),
+        "PSR": info.get('priceToSalesTrailing12Months', 'N/A'),
+        "Marg. EBIT": info.get('ebitdaMargins', 'N/A'),
+        "P/Ativos": info.get('priceToBook', 'N/A'),
+        "Marg. Líquida": info.get('netMargins', 'N/A'),
+        "P/Cap. Giro": 'N/A',  # Não disponível no Yahoo Finance
+        "EBIT / Ativo": 'N/A',  # Não disponível no Yahoo Finance
+        "P/Ativ Circ Liq": 'N/A',  # Não disponível no Yahoo Finance
+        "ROIC": 'N/A',  # Não disponível no Yahoo Finance
+        "Div. Yield": info.get('dividendYield', 'N/A'),
+        "ROE": info.get('returnOnEquity', 'N/A'),
+        "EV / EBITDA": info.get('enterpriseToEbitda', 'N/A'),
+        "Liquidez Corr": info.get('currentRatio', 'N/A'),
+        "EV / EBIT": 'N/A',  # Não disponível no Yahoo Finance
+        "Div Br/ Patrim": 'N/A',  # Não disponível no Yahoo Finance
+        "Cres. Rec (5a)": 'N/A',  # Não disponível no Yahoo Finance
+        "Giro Ativos": info.get('totalRevenue', 'N/A') / info.get('totalAssets', 'N/A'),
+        "Ativo": info.get('totalAssets', 'N/A'),
+        "Dív. Bruta": info.get('totalDebt', 'N/A'),
+        "Disponibilidades": info.get('cash', 'N/A'),
+        "Dív. Líquida": info.get('totalDebt', 'N/A') - info.get('cash', 'N/A'),
+        "Ativo Circulante": info.get('totalCurrentAssets', 'N/A'),
+        "Patrim. Líq": info.get('totalStockholderEquity', 'N/A'),
+    }
 
-def calculate_ls(data):
-    return data['Current Assets'].iloc[-1] / data['Current Liabilities'].iloc[-1]
+    # Criar DataFrame
+    df = pd.DataFrame([data])
 
-def calculate_at(data):
-    return data['Total Assets'].iloc[-1]
+    # Exibir DataFrame
+    print(df.to_string(index=False))
 
-def calculate_lc(data):
-    return data['Current Assets'].iloc[-1] / data['Current Liabilities'].iloc[-1]
-
-def calculate_p_vpa(data):
-    return data['Close'].iloc[-1] / data['Book Value'].iloc[-1]
-
-def calculate_lpa(data):
-    return data['Net Income'].iloc[-1] / data['Shares Outstanding'].iloc[-1]
-
-def calculate_roa(data):
-    return data['Net Income'].iloc[-1] / data['Total Assets'].iloc[-1]
-
-# Função principal do Streamlit
-def main():
-    st.title('Indicadores Financeiros')
-
-    ticker = st.text_input('Digite o ticker da ação:', 'AAPL')
-
-    if ticker:
-        data = yf.Ticker(ticker).history(period='5y')
-        financials = yf.Ticker(ticker).financials
-        balance_sheet = yf.Ticker(ticker).balance_sheet
-
-        indicators = {
-            'Variação da Média Trienal do Lucro Líquido (VarLL)': calculate_var_ll(financials),
-            'Índice Preço Lucro Médio (P/L)': calculate_p_l(data),
-            'Índice Dívida Financeira de Curto Prazo / Dívida Financeira Total (PFCP/PFT)': calculate_pfcp_pft(balance_sheet),
-            'Liquidez Seca (LS)': calculate_ls(balance_sheet),
-            'Ativo Total (AT)': calculate_at(balance_sheet),
-            'Liquidez Corrente (LC)': calculate_lc(balance_sheet),
-            'Índice Preço Valor Patrimonial por Ação (P/VPA)': calculate_p_vpa(balance_sheet),
-            'Lucro por Ação (LPA)': calculate_lpa(financials),
-            'Return on Assets (ROA)': calculate_roa(balance_sheet)
-        }
-
-        st.write('Indicadores Calculados:')
-        for name, value in indicators.items():
-            st.write(f'{name}: {value}')
-
-if __name__ == "__main__":
-    main()
+# Exemplo de uso
+ticker = "AAPL"  # Substitua pelo ticker desejado
+get_stock_data(ticker)
 
