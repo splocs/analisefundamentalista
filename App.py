@@ -187,6 +187,13 @@ exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period 
 exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
 
 
+exibir_dados("Média Móvel Simples (SMA)", lambda period: acao_escolhida.history(period="max").rolling(window=50).mean(), period)
+exibir_dados("Banda de Bollinger", lambda period: acao_escolhida.history(period="max"), period)  # A banda de Bollinger pode ser calculada separadamente
+exibir_dados("MACD", lambda period: acao_escolhida.history(period="max"), period)
+exibir_dados("RSI", lambda period: acao_escolhida.history(period="max"), period)
+
+
+
 # Gráficos usando Plotly
 # Gráfico de Histórico de Preços
 if not acao_escolhida.history(period="max").empty:
