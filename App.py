@@ -185,7 +185,7 @@ exibir_dados("Balanço patrimonial", lambda period: acao_escolhida.balance_sheet
 exibir_dados("Demonstração de resultados", lambda period: acao_escolhida.financials if period == 'annual' else acao_escolhida.quarterly_financials, period)
 exibir_dados("Fluxo de caixa", lambda period: acao_escolhida.cashflow if period == 'annual' else acao_escolhida.quarterly_cashflow, period)
 exibir_dados("Recomendações de analistas", lambda period: acao_escolhida.recommendations, period)
-exibir_dados("Informações Básicas", lambda period: acao_escolhida.news, period)
+
 
 # Gráficos usando Plotly
 # Gráfico de Histórico de Preços
