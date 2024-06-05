@@ -114,7 +114,7 @@ st.subheader('Indicadores Fundamentalistas')
 
 indicadores = {
     "P/L": info.get("trailingPE", "N/A"),
-    "LPA": info.get("epsTrailingTwelveMonths", "N/A"),
+    "LPA": info.get('trailingEps', 'N/A'),
     "P/VP": info.get("priceToBook", "N/A"),
     "VPA": info.get("bookValue", "N/A"),
     "P/EBIT": info.get("enterpriseToEbitda", "N/A"),
