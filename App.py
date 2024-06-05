@@ -201,6 +201,34 @@ exibir_dados("Variação de Preço", lambda period: acao_escolhida.history(perio
 exibir_dados("Percentual de Ganho/Perda", lambda period: acao_escolhida.history(period="max")['Close'].pct_change(), period)
 
 
+##ver se não tem duplicados
+
+exibir_dados("Descrição da Empresa", lambda period: info.get('longBusinessSummary', 'N/A'), period)
+exibir_dados("Setor da Empresa", lambda period: info.get('sector', 'N/A'), period)
+exibir_dados("Subsetor da Empresa", lambda period: info.get('industry', 'N/A'), period)
+exibir_dados("P/L (Preço/Lucro)", lambda period: info.get('trailingPE', 'N/A'), period)
+exibir_dados("Dividend Yield", lambda period: info.get('dividendYield', 'N/A'), period)
+exibir_dados("ROE (Return on Equity)", lambda period: info.get('returnOnEquity', 'N/A'), period)
+exibir_dados("P/VP (Preço/Valor Patrimonial)", lambda period: info.get('priceToBook', 'N/A'), period)
+exibir_dados("Margem Bruta", lambda period: info.get('grossMargins', 'N/A'), period)
+# Adicione outros indicadores fundamentalistas conforme necessário
+exibir_dados("Ativo Total", lambda period: acao_escolhida.balance_sheet[0].get('totalAssets', 'N/A'), period)
+exibir_dados("Passivo Total", lambda period: acao_escolhida.balance_sheet[0].get('totalLiabilities', 'N/A'), period)
+# Adicione outros itens do balanço patrimonial conforme necessário
+# Você pode acessar diretamente os dados da demonstração de resultados usando o método 'financials'
+exibir_dados("Receita Total", lambda period: acao_escolhida.financials[0].get('totalRevenue', 'N/A'), period)
+exibir_dados("Lucro Líquido", lambda period: acao_escolhida.financials[0].get('netIncome', 'N/A'), period)
+# Adicione outros itens da demonstração de resultados conforme necessário
+# Você pode acessar diretamente os dados do fluxo de caixa usando o método 'cashflow'
+exibir_dados("Fluxo de Caixa Operacional", lambda period: acao_escolhida.cashflow[0].get('totalCashFromOperatingActivities', 'N/A'), period)
+exibir_dados("Fluxo de Caixa de Investimento", lambda period: acao_escolhida.cashflow[0].get('totalCashflowsFromInvestingActivities', 'N/A'), period)
+# Adicione outros itens do fluxo de caixa conforme necessário
+
+
+
+
+
+
 #para graficos
 exibir_dados("Média Móvel Simples (SMA)", lambda period: acao_escolhida.history(period="max").rolling(window=50).mean(), period)
 exibir_dados("Banda de Bollinger", lambda period: acao_escolhida.history(period="max"), period)  # A banda de Bollinger pode ser calculada separadamente
